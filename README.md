@@ -98,3 +98,5 @@ From another prompt and same directory as before, run
 
 
 ## License
+
+MIT 
