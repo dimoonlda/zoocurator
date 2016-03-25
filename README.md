@@ -17,7 +17,7 @@ just to realize Curator `3.1.0` was using an alpha version of Zookeeper from mav
 
 ### Pre-requistes
 - Zookeeper `3.4.6`
-- JDK 1.8
+- JDK 1.7/1.8
 - Maven 3.x
 
 ### Build
