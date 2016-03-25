@@ -3,6 +3,8 @@
 Test the various recipes for Apache Zookeeper along with Apache Curator.
 We will focus on Discovery service first.
 
+[![Build Status](https://travis-ci.org/rahulsh1/zoocurator.svg?branch=master)](https://travis-ci.org/rahulsh1/zoocurator)
+
 ## Discovery
 We will be creating some mock services, registering them so that can be discovered by other services.
 
@@ -99,4 +101,4 @@ From another prompt and same directory as before, run
 
 ## License
 
-MIT 
+MIT
