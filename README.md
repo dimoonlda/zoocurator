@@ -1,6 +1,6 @@
 # zoocurator
 
-Test the various recipes for Apache Zookeeper along with Apache Curator.
+Explore the various recipes for Apache Zookeeper along with Apache Curator.
 We will focus on Discovery service first.
 
 [![Build Status](https://travis-ci.org/rahulsh1/zoocurator.svg?branch=master)](https://travis-ci.org/rahulsh1/zoocurator)
@@ -9,33 +9,38 @@ We will focus on Discovery service first.
 We will be creating some mock services, registering them so that can be discovered by other services.
 
 Note I am using Zookeeper `3.4.6` along with Curator `2.10.0`.
-I installed everything latest just to find it is not working. I used Zookeeper `3.4.8` along with Curator `3.1.0` and that kept throwing
+I installed everything latest just to find it was not working. I used Zookeeper `3.4.8` along with Curator `3.1.0` and that kept throwing
 
      2016-03-24 22:43:03,759 [myid:] - WARN  [NIOServerCxn.Factory:0.0.0.0/0.0.0.0:2181:ZooKeeperServer@707] - Received packet at server of unknown type 15
 
-just to realize Curator `3.1.0` was using an alpha version of Zookeeper from maven dependencies. Curator `2.10.0` is latest too but that works with Zookeeper `3.4.6` which was released quite some time ago.
+just to realize Curator `3.1.0` was using an alpha version of Zookeeper from maven dependencies.
+Curator `2.10.0` is latest too but that works with Zookeeper `3.4.6` which was released quite some time back.
 
-### Pre-requistes
+### Pre-requisites
 - Zookeeper `3.4.6`
 - JDK 1.7/1.8
 - Maven 3.x
 
 ### Build
-Download all sources and build with Curator. Maven will download the correct dependencies.
+Download all sources and build with maven. Maven will download the correct dependencies.
 
-    git clone <path>/zoocurator.git
-    cd zoocurator
-    mvn install
+    $ git clone https://github.com/rahulsh1/zoocurator.git
+    $ cd zoocurator
+    $ mvn install
 
 ### Run
-- Start ZooKeeper server from zookeeper directory. I start this in foreground to look for messages if something is not correct.
+- Start ZooKeeper server from zookeeper directory. I start this in foreground to look for interesting messages on the console.
 
       $ bin/zkServer.sh start-foreground
 
 - Start our program.
-This assumes our server is running on `127.0.0.1:2181`. If your server is not running on localhost or port 2181, you can use 'mvn install -Prun -Dzoo.server=<server>:<port>'
+This assumes our server is running on `127.0.0.1:2181`. 
 
-      $ mvn install -Prun
+       $ mvn install -Prun
+
+   If your server is not running on localhost or port 2181, you can use:
+
+       $ mvn install -Prun -Dzoo.server=<server>:<port>
 
 ### Output
 
@@ -59,6 +64,7 @@ This assumes our server is running on `127.0.0.1:2181`. If your server is not ru
     	orders: http://192.168.0.102:1238
     	orders: http://192.168.0.102:437
 
+
 From another prompt and same directory as before, run
 
     $ mvn install -Prun
@@ -71,11 +77,12 @@ From another prompt and same directory as before, run
 
 > Feel free to add/delete services and check from other terminal.
 
-> Also shutdown the server and bring it back up and see if you can still see all the servies registered.
+> Also shutdown the ZooKeeper Server and bring it back up and see if you can still see all the services registered.
 
 ### Checking results with ZooKeeper Client
 
     $ bin/zkCli.sh -server 127.0.0.1:2181
+
     [zk: 127.0.0.1:2181(CONNECTED) 1] ls /myapp
     [services]
     [zk: 127.0.0.1:2181(CONNECTED) 2] ls /myapp/services/orders
