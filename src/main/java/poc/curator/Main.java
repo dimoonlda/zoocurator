@@ -10,7 +10,7 @@ import java.util.Random;
  *
  * Some snippets taken from Curator examples.
  */
-public class Main {
+public final class Main {
 
   Random random = new Random();
 

@@ -1,6 +1,6 @@
 package poc.curator;
 
-public class Config {
+public final class Config {
 
   /* Location of ZooKeeper Server. */
   public static final String ZK_CONNECTION_STRING = System.getProperty("zoo.server", "127.0.0.1:2181");

@@ -35,12 +35,12 @@ Download all sources and build with maven. Maven will download the correct depen
 ### Run
 - Start ZooKeeper server from zookeeper directory. I start this in foreground to look for interesting messages on the console.
 
-         $ bin/zkServer.sh start-foreground
+        $ bin/zkServer.sh start-foreground
 
 - Start our program.
 This assumes our server is running on `127.0.0.1:2181`. 
 
-         $ mvn install -Prun
+        $ mvn install -Prun
 
    If your server is not running on localhost or port 2181, you can use:
 

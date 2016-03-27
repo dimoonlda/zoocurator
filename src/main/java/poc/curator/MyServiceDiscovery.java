@@ -16,14 +16,14 @@ import java.util.*;
  * This class acts as a facade over the Curator APIs for Service Registration and Discovery.
  * You can register/unregister, discover all services and discover based on name.
  */
-public class MyServiceDiscovery {
+public final class MyServiceDiscovery {
 
   private final CuratorFramework curatorClient;
   private final ServiceDiscovery<InstanceDetails> serviceDiscovery;
   private final Map<String, ServiceInstance<InstanceDetails>> serviceInstances;
   private final MyPathWatcher watcher;
 
-  // tracks all closeables so we can do a clean termination all of them.
+  // tracks all closeables so we can do a clean termination for all of them.
   private final List<Closeable> closeAbles = new ArrayList<>();
 
   public MyServiceDiscovery(String zookeeperAddress) throws Exception {
@@ -35,7 +35,7 @@ public class MyServiceDiscovery {
         new ExponentialBackoffRetry(1000, 3));
 
     // Payload Serializer
-    JsonInstanceSerializer<InstanceDetails> serializer = new JsonInstanceSerializer<>(InstanceDetails.class);
+    final JsonInstanceSerializer<InstanceDetails> serializer = new JsonInstanceSerializer<>(InstanceDetails.class);
 
     // Service Discovery
     serviceDiscovery = ServiceDiscoveryBuilder.builder(InstanceDetails.class)
@@ -44,15 +44,15 @@ public class MyServiceDiscovery {
         .serializer(serializer)
         .build();
 
-
+    // Watches for any changes to given PATH
     watcher = new MyPathWatcher(curatorClient);
   }
 
   public void registerService(String serviceName, int servicePort) throws UnknownHostException, Exception {
     // Scheme, address and port - This will yield an address of form: http://<ip>:port/
-    UriSpec uriSpec = new UriSpec("{scheme}://{address}:{port}");
+    final UriSpec uriSpec = new UriSpec("{scheme}://{address}:{port}");
 
-    ServiceInstance<InstanceDetails> thisInstance = ServiceInstance.<InstanceDetails>builder().name(serviceName)
+    final ServiceInstance<InstanceDetails> thisInstance = ServiceInstance.<InstanceDetails>builder().name(serviceName)
         .uriSpec(uriSpec)
         // Pass the IP address the instance is available on
         .address(InetAddress.getLocalHost().getHostAddress())
@@ -76,8 +76,9 @@ public class MyServiceDiscovery {
   }
 
   public void discover(final String serviceName) throws Exception {
-    Collection<ServiceInstance<InstanceDetails>> instances = serviceDiscovery.queryForInstances(serviceName);
     System.out.println("Looking up " + serviceName);
+    final Collection<ServiceInstance<InstanceDetails>> instances = serviceDiscovery.queryForInstances(serviceName);
+
     for (ServiceInstance<InstanceDetails> instance : instances) {
       outputInstance(instance);
     }
@@ -87,7 +88,7 @@ public class MyServiceDiscovery {
     final Collection<String> serviceNames = serviceDiscovery.queryForNames();
 
     for (String serviceName : serviceNames) {
-      Collection<ServiceInstance<InstanceDetails>> instances = serviceDiscovery.queryForInstances(serviceName);
+      final Collection<ServiceInstance<InstanceDetails>> instances = serviceDiscovery.queryForInstances(serviceName);
       System.out.println("Looking up " + serviceName);
       for (ServiceInstance<InstanceDetails> instance : instances) {
         outputInstance(instance);
@@ -103,8 +104,8 @@ public class MyServiceDiscovery {
       // add to top so we can close it first.
       closeAbles.add(0, serviceDiscovery);
 
+      // watch for changes to SERVICES_PATH
       closeAbles.add(0, watcher.addTreeWatch(Config.SERVICES_PATH));
-
     } catch (Exception e) {
       throw new RuntimeException("Error starting Curator Framework/Discovery", e);
     }

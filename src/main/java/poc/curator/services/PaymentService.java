@@ -6,7 +6,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 @JsonRootName("service")
-public class PaymentService implements MyService {
+public final class PaymentService implements MyService {
 
   @Override
   public String getName() {
