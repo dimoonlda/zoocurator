@@ -21,6 +21,7 @@ public class MyServiceDiscovery {
   private final CuratorFramework curatorClient;
   private final ServiceDiscovery<InstanceDetails> serviceDiscovery;
   private final Map<String, ServiceInstance<InstanceDetails>> serviceInstances;
+  private final MyPathWatcher watcher;
 
   // tracks all closeables so we can do a clean termination all of them.
   private final List<Closeable> closeAbles = new ArrayList<>();
@@ -28,6 +29,8 @@ public class MyServiceDiscovery {
   public MyServiceDiscovery(String zookeeperAddress) throws Exception {
     serviceInstances = new HashMap<>();
     System.out.println("Connecting to ZooKeeper: " + zookeeperAddress);
+
+    // Specify retry mechanism in case of recoverable errors from ZooKeeper.
     curatorClient = CuratorFrameworkFactory.newClient(zookeeperAddress,
         new ExponentialBackoffRetry(1000, 3));
 
@@ -37,9 +40,12 @@ public class MyServiceDiscovery {
     // Service Discovery
     serviceDiscovery = ServiceDiscoveryBuilder.builder(InstanceDetails.class)
         .client(curatorClient)
-        .basePath(Config.BASE_PATH)
+        .basePath(Config.SERVICES_PATH)
         .serializer(serializer)
         .build();
+
+
+    watcher = new MyPathWatcher(curatorClient);
   }
 
   public void registerService(String serviceName, int servicePort) throws UnknownHostException, Exception {
@@ -96,6 +102,9 @@ public class MyServiceDiscovery {
       serviceDiscovery.start();
       // add to top so we can close it first.
       closeAbles.add(0, serviceDiscovery);
+
+      closeAbles.add(0, watcher.addTreeWatch(Config.SERVICES_PATH));
+
     } catch (Exception e) {
       throw new RuntimeException("Error starting Curator Framework/Discovery", e);
     }

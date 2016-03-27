@@ -1,9 +1,13 @@
 # zoocurator
 
 Explore the various recipes for Apache Zookeeper along with Apache Curator.
-We will focus on Discovery service first.
 
 [![Build Status](https://travis-ci.org/rahulsh1/zoocurator.svg?branch=master)](https://travis-ci.org/rahulsh1/zoocurator)
+
+## Recipes covered
+- Discovery
+- Path Watch: Tree (all changes on a certain tree), Path (only immediate level children changes)
+
 
 ## Discovery
 We will be creating some mock services, registering them so that can be discovered by other services.
