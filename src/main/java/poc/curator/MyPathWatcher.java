@@ -38,7 +38,7 @@ public final class MyPathWatcher {
 
       @Override
       public void childEvent(CuratorFramework curatorFramework, TreeCacheEvent event) throws Exception {
-        System.out.println("Got event: " + event.getType() + " data:" + event.getData());
+        System.out.println("Got event: " + event.getType() + " data:" + new String(event.getData().getData()));
         switch (event.getType()) {
 
           case NODE_ADDED:
@@ -68,7 +68,7 @@ public final class MyPathWatcher {
 
       @Override
       public void childEvent(CuratorFramework curatorFramework, PathChildrenCacheEvent event) throws Exception {
-        System.out.println("Got event: " + event.getType() + " data:" + event.getData());
+        System.out.println("Got event: " + event.getType() + " data:" + new String(event.getData().getData()));
         switch (event.getType()) {
 
           case CHILD_ADDED:

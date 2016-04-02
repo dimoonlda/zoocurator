@@ -1,0 +1,127 @@
+package poc.curator;
+
+import poc.curator.services.MyService;
+import poc.curator.services.OrdersService;
+import poc.curator.services.PaymentService;
+
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.util.Arrays;
+import java.util.Random;
+
+/**
+ * Main program to add, remove and list services.
+ *
+ * Some snippets taken from Curator examples.
+ */
+public final class Main2 {
+
+  Random random = new Random();
+
+  private void registerService(final MyServiceDiscovery2 discoverer, final String name) throws Exception {
+    // get a random port where we want to access request for our service. Typically this should be fixed though.
+    // we do this so we can simulate the same service on multiple ports.
+
+    final int randomPort = random.nextInt(10000);
+    MyService service;
+    if (randomPort % 2 == 0) {
+      service = new OrdersService();
+    } else {
+      service = new PaymentService();
+    }
+    discoverer.registerService(service.getName(), randomPort, service);
+    System.out.println("Service " + service.getName() + " registered on port " + randomPort);
+  }
+
+  private void unregisterService(final MyServiceDiscovery2 discoverer, final String name, final String port) throws Exception {
+    discoverer.unregisterService(name, port);
+  }
+
+  private void listInstance(final MyServiceDiscovery2 discoverer, final String name)  throws Exception {
+    discoverer.discover(name);
+  }
+
+  private void listAllInstances(final MyServiceDiscovery2 discoverer) throws Exception {
+    discoverer.discoverAll();
+  }
+
+  public static void main(String[] args) {
+    final Main2 main = new Main2();
+    MyServiceDiscovery2 discoverer = null;
+
+    try {
+      discoverer = new MyServiceDiscovery2(Config.ZK_CONNECTION_STRING);
+      discoverer.start();
+
+      main.doOperations(discoverer);
+
+    } catch (Exception e) {
+      e.printStackTrace();
+    } finally {
+      if (discoverer != null) {
+        discoverer.close();
+      }
+    }
+  }
+
+  private void doOperations(final MyServiceDiscovery2 discoverer) throws Exception {
+
+    try {
+      final BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
+      boolean done = false;
+      while (!done) {
+        System.out.print("> ");
+
+        String line = in.readLine();
+        if (line == null) {
+          break;
+        }
+
+        String command = line.trim();
+        String[] parts = command.split("\\s");
+        if (parts.length == 0) {
+          continue;
+        }
+        String operation = parts[0];
+        String args[] = Arrays.copyOfRange(parts, 1, parts.length);
+
+        if (operation.equalsIgnoreCase("help") || operation.equalsIgnoreCase("?")) {
+          printHelp();
+        } else if (operation.equalsIgnoreCase("q") || operation.equalsIgnoreCase("quit")) {
+          done = true;
+        } else if (operation.equals("add")) {
+          if (args.length == 1) {
+            registerService(discoverer, args[0]);
+          }
+        } else if (operation.equals("delete")) {
+          if (args.length == 2) {
+            unregisterService(discoverer, args[0], args[1]);
+          }
+        } else if (operation.equals("list")) {
+          if (args.length == 1) {
+            listInstance(discoverer, args[0]);
+          }
+        } else if (operation.equals("listall")) {
+          listAllInstances(discoverer);
+        } else if (operation.equals("listen")) {
+          discoverer.addCacheWatch(args[0]);
+        } else if (operation.equals("set")) {
+          discoverer.setData(args[0], args[1]);
+        }
+      }
+    } finally {
+    }
+  }
+
+  private static void printHelp() {
+    System.out.println("Supported commands at the prompt:\n");
+    System.out.println("add <name> <description>: Adds a mock service with the given name and description");
+    System.out.println("delete <name>: Deletes one of the mock services with the given name");
+    System.out.println("listall: Lists all the currently registered services");
+    System.out.println("list <name>: Lists an instance of the service with the given name");
+    System.out.println("listen <path>: Listens to cache with the given path");
+    System.out.println("set <path> <data>: Set data for node with the given path");
+    System.out.println("quit: Quit the program");
+    System.out.println();
+  }
+}

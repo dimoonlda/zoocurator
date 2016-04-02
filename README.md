@@ -6,7 +6,14 @@ Explore the various recipes for Apache Zookeeper along with Apache Curator.
 
 ## Recipes covered
 - Discovery
-- Path Watch: Tree (all changes on a certain tree), Path (only immediate level children changes)
+ 1. Registration and discovery
+ 2. Service Listener
+- Path Watch
+ 1. Tree (all changes on a certain tree)
+ 2. Path (only immediate level children changes)
+- Cache
+ 1. Set config on a path
+ 2. Watch changes to this config
 
 
 ## Discovery
@@ -78,6 +85,19 @@ From another prompt and same directory as before, run
     	orders: http://192.168.0.102:1238
     	orders: http://192.168.0.102:437
     >
+
+Set data on certain Path and watch for changes
+
+    > set /mycache "zoo.server=abc;zoo.port=5555"      
+    > listen /mycache
+    Added watch for /mycache
+    > Cache changed: "zoo.server=abc;zoo.port=5555"
+    
+    > set /mycache2 value1
+    > Cache changed: value1
+    
+    > set /mycache2 value2
+    > Cache changed: value2
 
 > Feel free to add/delete services and check from other terminal.
 

@@ -10,7 +10,4 @@ public final class Config {
 
   public static final String CONFIG_PATH = "/myapp/config";
 
-  public static final String ORDERS_SERVICE  = "orders";
-  public static final String PAYMENT_SERVICE = "payment";
-
 }

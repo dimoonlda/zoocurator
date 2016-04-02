@@ -57,7 +57,7 @@
             </executions>
             <configuration>
               <includeProjectDependencies>true</includeProjectDependencies>
-              <mainClass>poc.curator.Main</mainClass>
+              <mainClass>poc.curator.Main2</mainClass>
               <arguments>
                 <argument></argument>
               </arguments>
