@@ -144,6 +144,7 @@ public final class MyServiceDiscovery2 {
       closeAbles.add(0, serviceDiscovery);
       closeAbles.add(0, serviceCache);
 
+      closeAbles.add(0, nodeCache);
       // watch for changes to SERVICES_PATH
       closeAbles.add(0, watcher.addTreeWatch(Config.SERVICES_PATH));
     } catch (Exception e) {

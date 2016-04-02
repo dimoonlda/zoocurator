@@ -5,6 +5,7 @@ import org.apache.curator.framework.recipes.cache.NodeCache;
 import org.apache.curator.framework.recipes.cache.NodeCacheListener;
 import org.apache.zookeeper.KeeperException;
 
+import java.io.Closeable;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -12,7 +13,7 @@ import java.util.List;
 /**
  * Global cache that can be accessed by any client.
  */
-public final class MyGlobalCache {
+public final class MyGlobalCache implements Closeable {
 
   private final CuratorFramework client;
   private final List<NodeCache> nodeCacheList;
