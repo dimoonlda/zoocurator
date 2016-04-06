@@ -20,7 +20,7 @@ import java.util.*;
  * This class acts as a facade over the Curator APIs for Service Registration and Discovery.
  * You can register/unregister, discover all services and discover based on name.
  */
-public final class MyServiceDiscovery2 {
+public final class ZooServices {
 
   private final CuratorFramework curatorClient;
   private final ServiceDiscovery<MyService> serviceDiscovery;
@@ -28,12 +28,12 @@ public final class MyServiceDiscovery2 {
 
   private final Map<String, ServiceInstance<MyService>> serviceInstances;
   private final MyPathWatcher watcher;
-  private final MyGlobalCache nodeCache;
+  private final MyGlobalCache myGlobalCache;
 
   // tracks all closeables so we can do a clean termination for all of them.
   private final List<Closeable> closeAbles = new ArrayList<>();
 
-  public MyServiceDiscovery2(String zookeeperAddress) throws Exception {
+  public ZooServices(String zookeeperAddress) throws Exception {
     serviceInstances = new HashMap<>();
     System.out.println("Connecting to ZooKeeper: " + zookeeperAddress);
 
@@ -58,7 +58,7 @@ public final class MyServiceDiscovery2 {
     // Watches for any changes to given PATH
     watcher = new MyPathWatcher(curatorClient);
 
-    nodeCache = new MyGlobalCache(curatorClient);
+    myGlobalCache = new MyGlobalCache(curatorClient);
   }
 
   public void registerService(String serviceName, int servicePort, MyService obj) throws UnknownHostException, Exception {
@@ -74,7 +74,6 @@ public final class MyServiceDiscovery2 {
         // Pass other Instance details that you want to expose for other services to discover
         .payload(obj)
         .build();
-
 
     serviceDiscovery.registerService(thisInstance);
 
@@ -110,9 +109,9 @@ public final class MyServiceDiscovery2 {
     }
   }
 
-  public void addCacheWatch(String path) {
+  public void addDataWatch(String path) {
     try {
-      nodeCache.addNodeCacheWatch(path);
+      myGlobalCache.addNodeCacheWatch(path);
     } catch (Exception e) {
       e.printStackTrace();
     }
@@ -133,6 +132,22 @@ public final class MyServiceDiscovery2 {
     }
   }
 
+  public String getData(String path) {
+    String data = null;
+    try {
+      byte[] bytes = curatorClient.getData().forPath(path);
+      if (bytes != null) {
+        data = new String(bytes);
+      }
+    } catch (KeeperException.NoNodeException e) {
+      // do nothing if node does not exist.
+    }
+    catch (Exception e) {
+      e.printStackTrace();
+    }
+    return data;
+  }
+
   public void start() {
     try {
       curatorClient.start();
@@ -144,7 +159,7 @@ public final class MyServiceDiscovery2 {
       closeAbles.add(0, serviceDiscovery);
       closeAbles.add(0, serviceCache);
 
-      closeAbles.add(0, nodeCache);
+      closeAbles.add(0, myGlobalCache);
       // watch for changes to SERVICES_PATH
       closeAbles.add(0, watcher.addTreeWatch(Config.SERVICES_PATH));
     } catch (Exception e) {

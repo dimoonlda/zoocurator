@@ -16,12 +16,11 @@ import java.util.Random;
  */
 public final class Main2 {
 
-  Random random = new Random();
+  private Random random = new Random();
 
-  private void registerService(final MyServiceDiscovery2 discoverer, final String name) throws Exception {
+  private void registerService(final ZooServices zooServices, final String name) throws Exception {
     // get a random port where we want to access request for our service. Typically this should be fixed though.
     // we do this so we can simulate the same service on multiple ports.
-
     final int randomPort = random.nextInt(10000);
     MyService service;
     if (randomPort % 2 == 0) {
@@ -29,42 +28,42 @@ public final class Main2 {
     } else {
       service = new PaymentService();
     }
-    discoverer.registerService(service.getName(), randomPort, service);
+    zooServices.registerService(service.getName(), randomPort, service);
     System.out.println("Service " + service.getName() + " registered on port " + randomPort);
   }
 
-  private void unregisterService(final MyServiceDiscovery2 discoverer, final String name, final String port) throws Exception {
-    discoverer.unregisterService(name, port);
+  private void unregisterService(final ZooServices zooServices, final String name, final String port) throws Exception {
+    zooServices.unregisterService(name, port);
   }
 
-  private void listInstance(final MyServiceDiscovery2 discoverer, final String name)  throws Exception {
-    discoverer.discover(name);
+  private void listInstance(final ZooServices zooServices, final String name)  throws Exception {
+    zooServices.discover(name);
   }
 
-  private void listAllInstances(final MyServiceDiscovery2 discoverer) throws Exception {
-    discoverer.discoverAll();
+  private void listAllInstances(final ZooServices zooServices) throws Exception {
+    zooServices.discoverAll();
   }
 
   public static void main(String[] args) {
     final Main2 main = new Main2();
-    MyServiceDiscovery2 discoverer = null;
+    ZooServices zooServices = null;
 
     try {
-      discoverer = new MyServiceDiscovery2(Config.ZK_CONNECTION_STRING);
-      discoverer.start();
+      zooServices = new ZooServices(Config.ZK_CONNECTION_STRING);
+      zooServices.start();
 
-      main.doOperations(discoverer);
+      main.doOperations(zooServices);
 
     } catch (Exception e) {
       e.printStackTrace();
     } finally {
-      if (discoverer != null) {
-        discoverer.close();
+      if (zooServices != null) {
+        zooServices.close();
       }
     }
   }
 
-  private void doOperations(final MyServiceDiscovery2 discoverer) throws Exception {
+  private void doOperations(final ZooServices zooServices) throws Exception {
 
     try {
       final BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
@@ -91,22 +90,31 @@ public final class Main2 {
           done = true;
         } else if (operation.equals("add")) {
           if (args.length == 1) {
-            registerService(discoverer, args[0]);
+            registerService(zooServices, args[0]);
           }
         } else if (operation.equals("delete")) {
           if (args.length == 2) {
-            unregisterService(discoverer, args[0], args[1]);
+            unregisterService(zooServices, args[0], args[1]);
           }
         } else if (operation.equals("list")) {
           if (args.length == 1) {
-            listInstance(discoverer, args[0]);
+            listInstance(zooServices, args[0]);
           }
         } else if (operation.equals("listall")) {
-          listAllInstances(discoverer);
+          listAllInstances(zooServices);
         } else if (operation.equals("listen")) {
-          discoverer.addCacheWatch(args[0]);
+          if (args.length == 1) {
+            zooServices.addDataWatch(args[0]);
+          }
         } else if (operation.equals("set")) {
-          discoverer.setData(args[0], args[1]);
+          if (args.length == 2) {
+            zooServices.setData(args[0], args[1]);
+          }
+        } else if (operation.equals("get")) {
+          if (args.length == 1) {
+            String data = zooServices.getData(args[0]);
+            System.out.println("Got: " + data);
+          }
         }
       }
     } finally {
@@ -115,12 +123,13 @@ public final class Main2 {
 
   private static void printHelp() {
     System.out.println("Supported commands at the prompt:\n");
-    System.out.println("add <name> <description>: Adds a mock service with the given name and description");
+    System.out.println("add: Adds a random Orders/Payment service");
     System.out.println("delete <name>: Deletes one of the mock services with the given name");
     System.out.println("listall: Lists all the currently registered services");
     System.out.println("list <name>: Lists an instance of the service with the given name");
-    System.out.println("listen <path>: Listens to cache with the given path");
     System.out.println("set <path> <data>: Set data for node with the given path");
+    System.out.println("get <path>: Get data for node with the given path");
+    System.out.println("listen <path>: Listens to changes for the given path");
     System.out.println("quit: Quit the program");
     System.out.println();
   }
