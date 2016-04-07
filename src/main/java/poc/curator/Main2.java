@@ -18,7 +18,7 @@ public final class Main2 {
 
   private Random random = new Random();
 
-  private void registerService(final ZooServices zooServices, final String name) throws Exception {
+  private void registerService(final ZooKeeperRecipes zooKeeperRecipes, final String name) throws Exception {
     // get a random port where we want to access request for our service. Typically this should be fixed though.
     // we do this so we can simulate the same service on multiple ports.
     final int randomPort = random.nextInt(10000);
@@ -28,42 +28,42 @@ public final class Main2 {
     } else {
       service = new PaymentService();
     }
-    zooServices.registerService(service.getName(), randomPort, service);
+    zooKeeperRecipes.registerService(service.getName(), randomPort, service);
     System.out.println("Service " + service.getName() + " registered on port " + randomPort);
   }
 
-  private void unregisterService(final ZooServices zooServices, final String name, final String port) throws Exception {
-    zooServices.unregisterService(name, port);
+  private void unregisterService(final ZooKeeperRecipes zooKeeperRecipes, final String name, final String port) throws Exception {
+    zooKeeperRecipes.unregisterService(name, port);
   }
 
-  private void listInstance(final ZooServices zooServices, final String name)  throws Exception {
-    zooServices.discover(name);
+  private void listInstance(final ZooKeeperRecipes zooKeeperRecipes, final String name)  throws Exception {
+    zooKeeperRecipes.discover(name);
   }
 
-  private void listAllInstances(final ZooServices zooServices) throws Exception {
-    zooServices.discoverAll();
+  private void listAllInstances(final ZooKeeperRecipes zooKeeperRecipes) throws Exception {
+    zooKeeperRecipes.discoverAll();
   }
 
   public static void main(String[] args) {
     final Main2 main = new Main2();
-    ZooServices zooServices = null;
+    ZooKeeperRecipes zooKeeperRecipes = null;
 
     try {
-      zooServices = new ZooServices(Config.ZK_CONNECTION_STRING);
-      zooServices.start();
+      zooKeeperRecipes = new ZooKeeperRecipes(Config.ZK_CONNECTION_STRING);
+      zooKeeperRecipes.start();
 
-      main.doOperations(zooServices);
+      main.doOperations(zooKeeperRecipes);
 
     } catch (Exception e) {
       e.printStackTrace();
     } finally {
-      if (zooServices != null) {
-        zooServices.close();
+      if (zooKeeperRecipes != null) {
+        zooKeeperRecipes.close();
       }
     }
   }
 
-  private void doOperations(final ZooServices zooServices) throws Exception {
+  private void doOperations(final ZooKeeperRecipes zooKeeperRecipes) throws Exception {
 
     try {
       final BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
@@ -90,29 +90,29 @@ public final class Main2 {
           done = true;
         } else if (operation.equals("add")) {
           if (args.length == 1) {
-            registerService(zooServices, args[0]);
+            registerService(zooKeeperRecipes, args[0]);
           }
         } else if (operation.equals("delete")) {
           if (args.length == 2) {
-            unregisterService(zooServices, args[0], args[1]);
+            unregisterService(zooKeeperRecipes, args[0], args[1]);
           }
         } else if (operation.equals("list")) {
           if (args.length == 1) {
-            listInstance(zooServices, args[0]);
+            listInstance(zooKeeperRecipes, args[0]);
           }
         } else if (operation.equals("listall")) {
-          listAllInstances(zooServices);
+          listAllInstances(zooKeeperRecipes);
         } else if (operation.equals("listen")) {
           if (args.length == 1) {
-            zooServices.addDataWatch(args[0]);
+            zooKeeperRecipes.addDataWatch(args[0]);
           }
         } else if (operation.equals("set")) {
           if (args.length == 2) {
-            zooServices.setData(args[0], args[1]);
+            zooKeeperRecipes.setData(args[0], args[1]);
           }
         } else if (operation.equals("get")) {
           if (args.length == 1) {
-            String data = zooServices.getData(args[0]);
+            String data = zooKeeperRecipes.getData(args[0]);
             System.out.println("Got: " + data);
           }
         }

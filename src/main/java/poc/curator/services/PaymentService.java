@@ -12,7 +12,7 @@ public final class PaymentService implements MyService {
 
   @Override
   public String getName() {
-    return "PaymentService";
+    return PAYMENT_SERVICE;
   }
 
   @Override
@@ -22,7 +22,7 @@ public final class PaymentService implements MyService {
 
   @Override
   public String getURI() {
-    return "http://server:port/myservices/payment";
+    return "/myservices/payment";
   }
 
   @Override

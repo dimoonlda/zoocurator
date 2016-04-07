@@ -42,12 +42,12 @@ public final class MyPathWatcher {
         switch (event.getType()) {
 
           case NODE_ADDED:
-            System.out.println("Node added: " + ZKPaths.getNodeFromPath(event.getData().getPath()));
+            //System.out.println("Node added: " + ZKPaths.getNodeFromPath(event.getData().getPath()));
             break;
           case NODE_UPDATED:
             break;
           case NODE_REMOVED:
-            System.out.println("Node removed: " + ZKPaths.getNodeFromPath(event.getData().getPath()));
+            //System.out.println("Node removed: " + ZKPaths.getNodeFromPath(event.getData().getPath()));
             break;
           case CONNECTION_SUSPENDED:
             break;

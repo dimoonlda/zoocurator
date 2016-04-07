@@ -4,6 +4,9 @@ import java.util.Map;
 
 public interface MyService {
 
+  String ORDERS_SERVICE = "OrdersService";
+  String PAYMENT_SERVICE = "PaymentService";
+
   String getName();
 
   String getVersion();

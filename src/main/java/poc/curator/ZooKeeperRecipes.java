@@ -17,10 +17,10 @@ import java.net.UnknownHostException;
 import java.util.*;
 
 /**
- * This class acts as a facade over the Curator APIs for Service Registration and Discovery.
+ * This class acts as a facade over the Curator APIs for Zookeeper Recipes.
  * You can register/unregister, discover all services and discover based on name.
  */
-public final class ZooServices {
+public final class ZooKeeperRecipes {
 
   private final CuratorFramework curatorClient;
   private final ServiceDiscovery<MyService> serviceDiscovery;
@@ -33,7 +33,7 @@ public final class ZooServices {
   // tracks all closeables so we can do a clean termination for all of them.
   private final List<Closeable> closeAbles = new ArrayList<>();
 
-  public ZooServices(String zookeeperAddress) throws Exception {
+  public ZooKeeperRecipes(String zookeeperAddress) throws Exception {
     serviceInstances = new HashMap<>();
     System.out.println("Connecting to ZooKeeper: " + zookeeperAddress);
 
@@ -88,25 +88,28 @@ public final class ZooServices {
     }
   }
 
-  public void discover(final String serviceName) throws Exception {
+  public Collection<ServiceInstance<MyService>> discover(final String serviceName) throws Exception {
     System.out.println("Looking up " + serviceName);
     final Collection<ServiceInstance<MyService>> instances = serviceDiscovery.queryForInstances(serviceName);
 
     for (ServiceInstance<MyService> instance : instances) {
       outputInstance(instance);
     }
+    return instances;
   }
 
-  public void discoverAll() throws Exception {
+  public List<ServiceInstance<MyService>>  discoverAll() throws Exception {
     final Collection<String> serviceNames = serviceDiscovery.queryForNames();
-
+    final List<ServiceInstance<MyService>> list = new ArrayList<>();
     for (String serviceName : serviceNames) {
       final Collection<ServiceInstance<MyService>> instances = serviceDiscovery.queryForInstances(serviceName);
       System.out.println("Looking up " + serviceName);
       for (ServiceInstance<MyService> instance : instances) {
         outputInstance(instance);
       }
+      list.addAll(instances);
     }
+    return list;
   }
 
   public void addDataWatch(String path) {
