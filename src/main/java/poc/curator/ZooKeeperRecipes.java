@@ -2,11 +2,9 @@ package poc.curator;
 
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.CuratorFrameworkFactory;
-import org.apache.curator.framework.state.ConnectionState;
 import org.apache.curator.retry.ExponentialBackoffRetry;
 import org.apache.curator.x.discovery.*;
 import org.apache.curator.x.discovery.details.JsonInstanceSerializer;
-import org.apache.curator.x.discovery.details.ServiceCacheListener;
 import org.apache.zookeeper.KeeperException;
 import poc.curator.services.MyService;
 
@@ -14,7 +12,11 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * This class acts as a facade over the Curator APIs for Zookeeper Recipes.
@@ -24,8 +26,6 @@ public final class ZooKeeperRecipes {
 
   private final CuratorFramework curatorClient;
   private final ServiceDiscovery<MyService> serviceDiscovery;
-  private final ServiceCache<MyService> serviceCache;
-
   private final Map<String, ServiceInstance<MyService>> serviceInstances;
   private final MyPathWatcher watcher;
   private final MyGlobalCache myGlobalCache;
@@ -50,10 +50,6 @@ public final class ZooKeeperRecipes {
         .basePath(Config.SERVICES_PATH)
         .serializer(serializer)
         .build();
-
-    // Adding Service cache for Payment Service.= to get notifications.
-    serviceCache = serviceDiscovery.serviceCacheBuilder().name("PaymentService").build();
-    serviceCache.addListener(new MyServiceCacheListener());
 
     // Watches for any changes to given PATH
     watcher = new MyPathWatcher(curatorClient);
@@ -89,9 +85,7 @@ public final class ZooKeeperRecipes {
   }
 
   public Collection<ServiceInstance<MyService>> discover(final String serviceName) throws Exception {
-    System.out.println("Looking up " + serviceName);
     final Collection<ServiceInstance<MyService>> instances = serviceDiscovery.queryForInstances(serviceName);
-
     for (ServiceInstance<MyService> instance : instances) {
       outputInstance(instance);
     }
@@ -103,7 +97,6 @@ public final class ZooKeeperRecipes {
     final List<ServiceInstance<MyService>> list = new ArrayList<>();
     for (String serviceName : serviceNames) {
       final Collection<ServiceInstance<MyService>> instances = serviceDiscovery.queryForInstances(serviceName);
-      System.out.println("Looking up " + serviceName);
       for (ServiceInstance<MyService> instance : instances) {
         outputInstance(instance);
       }
@@ -156,12 +149,8 @@ public final class ZooKeeperRecipes {
       curatorClient.start();
       closeAbles.add(curatorClient);
       serviceDiscovery.start();
-      serviceCache.start();
-
       // add to top so we can close it first.
       closeAbles.add(0, serviceDiscovery);
-      closeAbles.add(0, serviceCache);
-
       closeAbles.add(0, myGlobalCache);
       // watch for changes to SERVICES_PATH
       closeAbles.add(0, watcher.addTreeWatch(Config.SERVICES_PATH));
@@ -183,19 +172,6 @@ public final class ZooKeeperRecipes {
 
   private static void outputInstance(ServiceInstance<MyService> instance) {
     System.out.println("\t" + instance.getPayload() + ": " + instance.buildUriSpec());
-  }
-
-  final class MyServiceCacheListener implements ServiceCacheListener {
-
-    @Override
-    public void cacheChanged() {
-      System.out.println("--> Cache changed");
-    }
-
-    @Override
-    public void stateChanged(CuratorFramework curatorFramework, ConnectionState connectionState) {
-      System.out.println("--> state changed: " + connectionState.isConnected());
-    }
   }
 
 }
