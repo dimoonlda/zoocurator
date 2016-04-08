@@ -18,14 +18,18 @@ public final class MyGlobalCache implements Closeable {
   private final CuratorFramework client;
   private final List<NodeCache> nodeCacheList;
 
+  interface CacheListener {
+    void dataChanged(String newData);
+  }
+
   public MyGlobalCache(CuratorFramework client) {
     this.client = client;
     nodeCacheList = new ArrayList<>();
   }
 
-  public NodeCache addNodeCacheWatch(String path) throws Exception {
+  public NodeCache addNodeCacheWatch(String path, CacheListener listener) throws Exception {
     final NodeCache cache = new NodeCache(client, path);
-    cache.getListenable().addListener(new MyNodeCacheListener(cache));
+    cache.getListenable().addListener(new MyNodeCacheListener(cache, listener));
     cache.start();
     nodeCacheList.add(cache);
     System.out.println("Added watch for " + path);
@@ -41,14 +45,18 @@ public final class MyGlobalCache implements Closeable {
   final class MyNodeCacheListener implements NodeCacheListener {
 
     private NodeCache nodeCache;
+    private CacheListener listener;
 
-    public MyNodeCacheListener(NodeCache cache) {
+    public MyNodeCacheListener(NodeCache cache, CacheListener listener) {
       nodeCache = cache;
+      this.listener = listener;
     }
 
     @Override
     public void nodeChanged() throws Exception {
-      System.out.println("Cache changed: " + new String(nodeCache.getCurrentData().getData()));
+      String data = new String(nodeCache.getCurrentData().getData());
+      System.out.println("Cache changed: " + data);
+      listener.dataChanged(data);
     }
   }
 }

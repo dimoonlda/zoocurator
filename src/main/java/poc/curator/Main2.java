@@ -104,7 +104,9 @@ public final class Main2 {
           listAllInstances(zooKeeperRecipes);
         } else if (operation.equals("listen")) {
           if (args.length == 1) {
-            zooKeeperRecipes.addDataWatch(args[0]);
+            zooKeeperRecipes.addDataWatch(args[0], (d) -> {
+              System.out.println("Got data:" + d);
+            });
           }
         } else if (operation.equals("set")) {
           if (args.length == 2) {

@@ -8,7 +8,9 @@ import poc.curator.services.MyService;
 import poc.curator.services.OrdersService;
 import poc.curator.services.PaymentService;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
 import static org.junit.Assert.*;
 
@@ -85,5 +87,16 @@ public class TestZooKeeperRecipes {
     }
   }
 
+  @Test
+  public void testCache() {
+    String path = "/data1";
+    final List<String> data = new ArrayList<>();
+    MyGlobalCache.CacheListener listener = (s) -> data.add(s);
+    zooKeeperRecipes.addDataWatch(path, listener);
 
+    zooKeeperRecipes.setData(path, "value1");
+
+    assertEquals("Size not same", 0, data.size());
+    assertEquals("Values different", "value1", zooKeeperRecipes.getData(path));
+  }
 }

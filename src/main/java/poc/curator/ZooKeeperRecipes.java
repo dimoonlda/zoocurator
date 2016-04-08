@@ -105,9 +105,9 @@ public final class ZooKeeperRecipes {
     return list;
   }
 
-  public void addDataWatch(String path) {
+  public void addDataWatch(String path, MyGlobalCache.CacheListener listener) {
     try {
-      myGlobalCache.addNodeCacheWatch(path);
+      myGlobalCache.addNodeCacheWatch(path, listener);
     } catch (Exception e) {
       e.printStackTrace();
     }
