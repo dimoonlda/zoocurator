@@ -11,6 +11,8 @@ import poc.curator.services.PaymentService;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 import static org.junit.Assert.*;
 
@@ -91,12 +93,24 @@ public class TestZooKeeperRecipes {
   public void testCache() {
     String path = "/data1";
     final List<String> data = new ArrayList<>();
-    MyGlobalCache.CacheListener listener = (s) -> data.add(s);
+    CountDownLatch latch = new CountDownLatch(1);
+    MyGlobalCache.CacheListener listener = (s) -> {
+      data.add(s);
+      latch.countDown();
+    };
     zooKeeperRecipes.addDataWatch(path, listener);
 
     zooKeeperRecipes.setData(path, "value1");
 
-    assertEquals("Size not same", 0, data.size());
+    // Wait for 2 seconds or until we get notified.
+    try {
+      latch.await(2, TimeUnit.SECONDS);
+    } catch (InterruptedException e) {
+    }
+
+    assertEquals("Size not same", 1, data.size());
     assertEquals("Values different", "value1", zooKeeperRecipes.getData(path));
+    assertEquals("Notified Value different", "value1", data.get(0));
   }
+
 }

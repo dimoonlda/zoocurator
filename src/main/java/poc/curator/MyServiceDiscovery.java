@@ -3,6 +3,7 @@ package poc.curator;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.CuratorFrameworkFactory;
 import org.apache.curator.retry.ExponentialBackoffRetry;
+import org.apache.curator.utils.CloseableUtils;
 import org.apache.curator.x.discovery.*;
 import org.apache.curator.x.discovery.details.JsonInstanceSerializer;
 
@@ -21,7 +22,6 @@ public final class MyServiceDiscovery {
   private final CuratorFramework curatorClient;
   private final ServiceDiscovery<InstanceDetails> serviceDiscovery;
   private final Map<String, ServiceInstance<InstanceDetails>> serviceInstances;
-  private final MyPathWatcher watcher;
 
   // tracks all closeables so we can do a clean termination for all of them.
   private final List<Closeable> closeAbles = new ArrayList<>();
@@ -43,9 +43,6 @@ public final class MyServiceDiscovery {
         .basePath(Config.SERVICES_PATH)
         .serializer(serializer)
         .build();
-
-    // Watches for any changes to given PATH
-    watcher = new MyPathWatcher(curatorClient);
   }
 
   public void registerService(String serviceName, int servicePort) throws UnknownHostException, Exception {
@@ -103,22 +100,15 @@ public final class MyServiceDiscovery {
       serviceDiscovery.start();
       // add to top so we can close it first.
       closeAbles.add(0, serviceDiscovery);
-
-      // watch for changes to SERVICES_PATH
-      closeAbles.add(0, watcher.addTreeWatch(Config.SERVICES_PATH));
     } catch (Exception e) {
       throw new RuntimeException("Error starting Curator Framework/Discovery", e);
     }
   }
 
   public void close() {
+    // Close all
     for (Closeable closeable : closeAbles) {
-      // Close all
-      try {
-        closeable.close();
-      } catch (IOException e) {
-        e.printStackTrace();
-      }
+      CloseableUtils.closeQuietly(closeable);
     }
   }
 

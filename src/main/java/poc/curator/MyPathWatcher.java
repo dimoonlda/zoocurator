@@ -2,7 +2,13 @@ package poc.curator;
 
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.recipes.cache.*;
+import org.apache.curator.utils.CloseableUtils;
 import org.apache.curator.utils.ZKPaths;
+
+import java.io.Closeable;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Watches for changes to a certain tree/path.
@@ -10,29 +16,39 @@ import org.apache.curator.utils.ZKPaths;
  * TreeWatch - Watch changes to root and all its sub-trees.
  * PathWatch - Watch only that node level and no sub-tree within it.
  */
-public final class MyPathWatcher {
+public final class MyPathWatcher implements Closeable {
 
   private final CuratorFramework client;
+  // tracks all closeables so we can do a clean termination for all of them.
+  private final List<Closeable> closeAbles = new ArrayList<>();
+
+  interface PathListener {
+    void nodeAdded(String path, String data);
+    void nodeDeleted(String path, String data);
+    void nodeUpdated(String path, String data);
+  }
 
   public MyPathWatcher(CuratorFramework client) {
     this.client = client;
   }
 
-  public TreeCache addTreeWatch(final String path) throws Exception {
+  public TreeCache addTreeWatch(final String path, PathListener listener) throws Exception {
     final TreeCache myPath = new TreeCache(client, path);
     myPath.start();
-    addTreeListener(myPath);
+    addTreeListener(myPath, listener);
+    closeAbles.add(myPath);
     return myPath;
   }
 
-  public PathChildrenCache addPathWatch(final String path) throws Exception {
+  public PathChildrenCache addPathWatch(final String path, PathListener listener) throws Exception {
     final PathChildrenCache myPath = new PathChildrenCache(client, path, true);
     myPath.start();
-    addPathListener(myPath);
+    addPathListener(myPath, listener);
+    closeAbles.add(myPath);
     return myPath;
   }
 
-  private void addTreeListener(final TreeCache myPath) {
+  private void addTreeListener(final TreeCache myPath, final PathListener pathListener) {
 
     final TreeCacheListener listener = new TreeCacheListener() {
 
@@ -42,12 +58,13 @@ public final class MyPathWatcher {
         switch (event.getType()) {
 
           case NODE_ADDED:
-            //System.out.println("Node added: " + ZKPaths.getNodeFromPath(event.getData().getPath()));
+            pathListener.nodeAdded(event.getData().getPath(), new String(event.getData().getData()));
             break;
           case NODE_UPDATED:
+            pathListener.nodeUpdated(event.getData().getPath(), new String(event.getData().getData()));
             break;
           case NODE_REMOVED:
-            //System.out.println("Node removed: " + ZKPaths.getNodeFromPath(event.getData().getPath()));
+            pathListener.nodeDeleted(event.getData().getPath(), new String(event.getData().getData()));
             break;
           case CONNECTION_SUSPENDED:
             break;
@@ -56,13 +73,13 @@ public final class MyPathWatcher {
           case CONNECTION_LOST:
             break;
         }
+
       }
     };
     myPath.getListenable().addListener(listener);
-    System.out.println("Added Tree listener");
   }
 
-  private void addPathListener(final PathChildrenCache myPath) {
+  private void addPathListener(final PathChildrenCache myPath, final PathListener pathListener) {
 
     final PathChildrenCacheListener listener = new PathChildrenCacheListener() {
 
@@ -72,12 +89,13 @@ public final class MyPathWatcher {
         switch (event.getType()) {
 
           case CHILD_ADDED:
-            System.out.println("Node added: " + ZKPaths.getNodeFromPath(event.getData().getPath()));
+            pathListener.nodeAdded(event.getData().getPath(), new String(event.getData().getData()));
             break;
           case CHILD_UPDATED:
+            pathListener.nodeUpdated(event.getData().getPath(), new String(event.getData().getData()));
             break;
           case CHILD_REMOVED:
-            System.out.println("Node removed: " + ZKPaths.getNodeFromPath(event.getData().getPath()));
+            pathListener.nodeDeleted(event.getData().getPath(), new String(event.getData().getData()));
             break;
           case CONNECTION_SUSPENDED:
             break;
@@ -89,6 +107,12 @@ public final class MyPathWatcher {
       }
     };
     myPath.getListenable().addListener(listener);
-    System.out.println("Added Path listener");
+  }
+
+  @Override
+  public void close() throws IOException {
+    for (Closeable closeable : closeAbles) {
+      CloseableUtils.closeQuietly(closeable);
+    }
   }
 }

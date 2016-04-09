@@ -27,7 +27,7 @@ public final class ZooKeeperRecipes {
   private final CuratorFramework curatorClient;
   private final ServiceDiscovery<MyService> serviceDiscovery;
   private final Map<String, ServiceInstance<MyService>> serviceInstances;
-  private final MyPathWatcher watcher;
+  private final MyPathWatcher myPathWatcher;
   private final MyGlobalCache myGlobalCache;
 
   // tracks all closeables so we can do a clean termination for all of them.
@@ -52,7 +52,7 @@ public final class ZooKeeperRecipes {
         .build();
 
     // Watches for any changes to given PATH
-    watcher = new MyPathWatcher(curatorClient);
+    myPathWatcher = new MyPathWatcher(curatorClient);
 
     myGlobalCache = new MyGlobalCache(curatorClient);
   }
@@ -152,8 +152,7 @@ public final class ZooKeeperRecipes {
       // add to top so we can close it first.
       closeAbles.add(0, serviceDiscovery);
       closeAbles.add(0, myGlobalCache);
-      // watch for changes to SERVICES_PATH
-      closeAbles.add(0, watcher.addTreeWatch(Config.SERVICES_PATH));
+      closeAbles.add(0, myPathWatcher);
     } catch (Exception e) {
       throw new RuntimeException("Error starting Curator Framework/Discovery", e);
     }
