@@ -77,7 +77,7 @@ public final class ZooKeeperRecipes {
     serviceInstances.put(serviceName + servicePort, thisInstance);
   }
 
-  public void unregisterService(final String serviceName, final String servicePort) throws Exception {
+  public void unregisterService(final String serviceName, final int servicePort) throws Exception {
     final ServiceInstance<MyService> thisInstance = serviceInstances.get(serviceName + servicePort);
     if (thisInstance != null) {
       serviceDiscovery.unregisterService(thisInstance);
@@ -87,20 +87,26 @@ public final class ZooKeeperRecipes {
   public Collection<ServiceInstance<MyService>> discover(final String serviceName) throws Exception {
     final Collection<ServiceInstance<MyService>> instances = serviceDiscovery.queryForInstances(serviceName);
     for (ServiceInstance<MyService> instance : instances) {
-      outputInstance(instance);
+      //outputInstance(instance);
     }
     return instances;
   }
 
   public List<ServiceInstance<MyService>>  discoverAll() throws Exception {
-    final Collection<String> serviceNames = serviceDiscovery.queryForNames();
+    Collection<String> serviceNames = null;
+    try {
+      serviceNames = serviceDiscovery.queryForNames();
+    } catch (KeeperException.NoNodeException ke) {
+    }
     final List<ServiceInstance<MyService>> list = new ArrayList<>();
-    for (String serviceName : serviceNames) {
-      final Collection<ServiceInstance<MyService>> instances = serviceDiscovery.queryForInstances(serviceName);
-      for (ServiceInstance<MyService> instance : instances) {
-        outputInstance(instance);
+    if (serviceNames != null) {
+      for (String serviceName : serviceNames) {
+        final Collection<ServiceInstance<MyService>> instances = serviceDiscovery.queryForInstances(serviceName);
+        for (ServiceInstance<MyService> instance : instances) {
+          //outputInstance(instance);
+        }
+        list.addAll(instances);
       }
-      list.addAll(instances);
     }
     return list;
   }
@@ -144,6 +150,10 @@ public final class ZooKeeperRecipes {
     return data;
   }
 
+  public MyPathWatcher getPathWatcher() {
+    return myPathWatcher;
+  }
+
   public void start() {
     try {
       curatorClient.start();
@@ -169,8 +179,8 @@ public final class ZooKeeperRecipes {
     }
   }
 
-  private static void outputInstance(ServiceInstance<MyService> instance) {
-    System.out.println("\t" + instance.getPayload() + ": " + instance.buildUriSpec());
-  }
+//  private static void outputInstance(ServiceInstance<MyService> instance) {
+//    System.out.println("\t" + instance.getPayload() + ": " + instance.buildUriSpec());
+//  }
 
 }

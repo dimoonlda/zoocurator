@@ -32,7 +32,7 @@ public final class Main2 {
     System.out.println("Service " + service.getName() + " registered on port " + randomPort);
   }
 
-  private void unregisterService(final ZooKeeperRecipes zooKeeperRecipes, final String name, final String port) throws Exception {
+  private void unregisterService(final ZooKeeperRecipes zooKeeperRecipes, final String name, final int port) throws Exception {
     zooKeeperRecipes.unregisterService(name, port);
   }
 
@@ -94,7 +94,7 @@ public final class Main2 {
           }
         } else if (operation.equals("delete")) {
           if (args.length == 2) {
-            unregisterService(zooKeeperRecipes, args[0], args[1]);
+            unregisterService(zooKeeperRecipes, args[0], Integer.parseInt(args[1]));
           }
         } else if (operation.equals("list")) {
           if (args.length == 1) {
