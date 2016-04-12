@@ -17,7 +17,7 @@ import java.util.*;
  * This class acts as a facade over the Curator APIs for Service Registration and Discovery.
  * You can register/unregister, discover all services and discover based on name.
  */
-public final class MyServiceDiscovery {
+public final class ServiceDiscoveryRecipe {
 
   private final CuratorFramework curatorClient;
   private final ServiceDiscovery<InstanceDetails> serviceDiscovery;
@@ -26,7 +26,7 @@ public final class MyServiceDiscovery {
   // tracks all closeables so we can do a clean termination for all of them.
   private final List<Closeable> closeAbles = new ArrayList<>();
 
-  public MyServiceDiscovery(String zookeeperAddress) throws Exception {
+  public ServiceDiscoveryRecipe(String zookeeperAddress) throws Exception {
     serviceInstances = new HashMap<>();
     System.out.println("Connecting to ZooKeeper: " + zookeeperAddress);
 

@@ -13,7 +13,7 @@ import java.util.List;
 /**
  * Global cache that can be accessed by any client.
  */
-public final class MyGlobalCache implements Closeable {
+public final class CacheRecipe implements Closeable {
 
   private final CuratorFramework client;
   private final List<NodeCache> nodeCacheList;
@@ -22,7 +22,7 @@ public final class MyGlobalCache implements Closeable {
     void dataChanged(String newData);
   }
 
-  public MyGlobalCache(CuratorFramework client) {
+  public CacheRecipe(CuratorFramework client) {
     this.client = client;
     nodeCacheList = new ArrayList<>();
   }

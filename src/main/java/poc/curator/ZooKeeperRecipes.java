@@ -3,6 +3,7 @@ package poc.curator;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.CuratorFrameworkFactory;
 import org.apache.curator.retry.ExponentialBackoffRetry;
+import org.apache.curator.utils.ZKPaths;
 import org.apache.curator.x.discovery.*;
 import org.apache.curator.x.discovery.details.JsonInstanceSerializer;
 import org.apache.zookeeper.KeeperException;
@@ -27,8 +28,8 @@ public final class ZooKeeperRecipes {
   private final CuratorFramework curatorClient;
   private final ServiceDiscovery<MyService> serviceDiscovery;
   private final Map<String, ServiceInstance<MyService>> serviceInstances;
-  private final MyPathWatcher myPathWatcher;
-  private final MyGlobalCache myGlobalCache;
+  private final PathWatcherRecipe pathWatcherRecipe;
+  private final CacheRecipe cacheRecipe;
 
   // tracks all closeables so we can do a clean termination for all of them.
   private final List<Closeable> closeAbles = new ArrayList<>();
@@ -52,9 +53,9 @@ public final class ZooKeeperRecipes {
         .build();
 
     // Watches for any changes to given PATH
-    myPathWatcher = new MyPathWatcher(curatorClient);
+    pathWatcherRecipe = new PathWatcherRecipe(curatorClient);
 
-    myGlobalCache = new MyGlobalCache(curatorClient);
+    cacheRecipe = new CacheRecipe(curatorClient);
   }
 
   public void registerService(String serviceName, int servicePort, MyService obj) throws UnknownHostException, Exception {
@@ -111,9 +112,10 @@ public final class ZooKeeperRecipes {
     return list;
   }
 
-  public void addDataWatch(String path, MyGlobalCache.CacheListener listener) {
+  public void addDataWatch(String path, CacheRecipe.CacheListener listener) {
     try {
-      myGlobalCache.addNodeCacheWatch(path, listener);
+      final String newPath = ZKPaths.makePath(Config.CONFIG_PATH, path);
+      cacheRecipe.addNodeCacheWatch(newPath, listener);
     } catch (Exception e) {
       e.printStackTrace();
     }
@@ -122,10 +124,12 @@ public final class ZooKeeperRecipes {
   public void setData(String path, String data) {
     byte[] bytes = data.getBytes();
     try {
-      curatorClient.setData().forPath(path, bytes);
+      final String newPath = ZKPaths.makePath(Config.CONFIG_PATH, path);
+      curatorClient.setData().forPath(newPath, bytes);
     } catch (KeeperException.NoNodeException e) {
       try {
-        curatorClient.create().creatingParentsIfNeeded().forPath(path, bytes);
+        final String newPath = ZKPaths.makePath(Config.CONFIG_PATH, path);
+        curatorClient.create().creatingParentsIfNeeded().forPath(newPath, bytes);
       } catch (Exception e1) {
         e1.printStackTrace();
       }
@@ -137,7 +141,8 @@ public final class ZooKeeperRecipes {
   public String getData(String path) {
     String data = null;
     try {
-      byte[] bytes = curatorClient.getData().forPath(path);
+      final String newPath = ZKPaths.makePath(Config.CONFIG_PATH, path);
+      byte[] bytes = curatorClient.getData().forPath(newPath);
       if (bytes != null) {
         data = new String(bytes);
       }
@@ -150,8 +155,17 @@ public final class ZooKeeperRecipes {
     return data;
   }
 
-  public MyPathWatcher getPathWatcher() {
-    return myPathWatcher;
+  public void remove(String path) throws Exception {
+    try {
+      final String newPath = ZKPaths.makePath(Config.CONFIG_PATH, path);
+      curatorClient.delete().forPath(newPath);
+    } catch (KeeperException.NoNodeException e) {
+      // ignore
+    }
+  }
+
+  public PathWatcherRecipe getPathWatcher() {
+    return pathWatcherRecipe;
   }
 
   public void start() {
@@ -161,8 +175,8 @@ public final class ZooKeeperRecipes {
       serviceDiscovery.start();
       // add to top so we can close it first.
       closeAbles.add(0, serviceDiscovery);
-      closeAbles.add(0, myGlobalCache);
-      closeAbles.add(0, myPathWatcher);
+      closeAbles.add(0, cacheRecipe);
+      closeAbles.add(0, pathWatcherRecipe);
     } catch (Exception e) {
       throw new RuntimeException("Error starting Curator Framework/Discovery", e);
     }

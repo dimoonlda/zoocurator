@@ -1,5 +1,6 @@
 package poc.curator;
 
+import org.apache.curator.utils.ZKPaths;
 import poc.curator.services.MyService;
 import poc.curator.services.OrdersService;
 import poc.curator.services.PaymentService;
@@ -117,6 +118,10 @@ public final class Main2 {
             String data = zooKeeperRecipes.getData(args[0]);
             System.out.println("Got: " + data);
           }
+        } else if (operation.equals("rm")) {
+          if (args.length == 1) {
+            zooKeeperRecipes.remove(args[0]);
+          }
         }
       }
     } finally {
@@ -131,6 +136,7 @@ public final class Main2 {
     System.out.println("list <name>: Lists an instance of the service with the given name");
     System.out.println("set <path> <data>: Set data for node with the given path");
     System.out.println("get <path>: Get data for node with the given path");
+    System.out.println("rm <path>: Remove node with the given path");
     System.out.println("listen <path>: Listens to changes for the given path");
     System.out.println("quit: Quit the program");
     System.out.println();

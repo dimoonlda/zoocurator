@@ -14,7 +14,7 @@ public final class Main {
 
   Random random = new Random();
 
-  private void registerService(final MyServiceDiscovery discoverer, final String name) throws Exception {
+  private void registerService(final ServiceDiscoveryRecipe discoverer, final String name) throws Exception {
     // get a random port where we want to access request for our service. Typically this should be fixed though.
     // we do this so we can simulate the same service on multiple ports.
 
@@ -23,24 +23,24 @@ public final class Main {
     System.out.println("Service " + name + " registered on port " + randomPort);
   }
 
-  private void unregisterService(final MyServiceDiscovery discoverer, final String name, final String port) throws Exception {
+  private void unregisterService(final ServiceDiscoveryRecipe discoverer, final String name, final String port) throws Exception {
     discoverer.unregisterService(name, port);
   }
 
-  private void listInstance(final MyServiceDiscovery discoverer, final String name)  throws Exception {
+  private void listInstance(final ServiceDiscoveryRecipe discoverer, final String name)  throws Exception {
     discoverer.discover(name);
   }
 
-  private void listAllInstances(final MyServiceDiscovery discoverer) throws Exception {
+  private void listAllInstances(final ServiceDiscoveryRecipe discoverer) throws Exception {
     discoverer.discoverAll();
   }
 
   public static void main(String[] args) {
     final Main main = new Main();
-    MyServiceDiscovery discoverer = null;
+    ServiceDiscoveryRecipe discoverer = null;
 
     try {
-      discoverer = new MyServiceDiscovery(Config.ZK_CONNECTION_STRING);
+      discoverer = new ServiceDiscoveryRecipe(Config.ZK_CONNECTION_STRING);
       discoverer.start();
 
       main.doOperations(discoverer);
@@ -54,7 +54,7 @@ public final class Main {
     }
   }
 
-  private void doOperations(final MyServiceDiscovery discoverer) throws Exception {
+  private void doOperations(final ServiceDiscoveryRecipe discoverer) throws Exception {
 
     try {
       final BufferedReader in = new BufferedReader(new InputStreamReader(System.in));

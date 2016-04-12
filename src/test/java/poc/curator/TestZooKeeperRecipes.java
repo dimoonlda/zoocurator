@@ -2,6 +2,7 @@ package poc.curator;
 
 import org.apache.curator.test.TestingServer;
 import org.apache.curator.utils.CloseableUtils;
+import org.apache.curator.utils.ZKPaths;
 import org.apache.curator.x.discovery.ServiceInstance;
 import org.junit.*;
 import poc.curator.services.MyService;
@@ -11,7 +12,6 @@ import poc.curator.services.PaymentService;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.BrokenBarrierException;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.CyclicBarrier;
@@ -111,12 +111,12 @@ public class TestZooKeeperRecipes {
 
   @Test
   public void testCache() {
-    final String path = "/data1";
+    final String path = "data1";
     final String pathValue = "value1";
 
     final List<String> data = new ArrayList<>();
     final CountDownLatch latch = new CountDownLatch(1);
-    final MyGlobalCache.CacheListener listener = (s) -> {
+    final CacheRecipe.CacheListener listener = (s) -> {
       data.add(s);
       latch.countDown();
     };
@@ -142,7 +142,7 @@ public class TestZooKeeperRecipes {
     try {
       final List<List<String>> dataList = new ArrayList<>();
       CyclicBarrier barrier = new CyclicBarrier(2);
-      MyPathWatcher.PathListener listener = new MyPathWatcher.PathListener() {
+      PathWatcherRecipe.PathListener listener = new PathWatcherRecipe.PathListener() {
 
         @Override
         public void nodeAdded(String path, String data) {
@@ -180,7 +180,7 @@ public class TestZooKeeperRecipes {
       final OrdersService ordersService = new OrdersService();
       zooKeeperRecipes.registerService(ordersService.getName(), 2000, ordersService);
       try {
-        barrier.await(3, TimeUnit.SECONDS);
+        barrier.await(1, TimeUnit.SECONDS);
       } catch (InterruptedException e) {
       }
 
@@ -205,12 +205,12 @@ public class TestZooKeeperRecipes {
   @Test
   public void testNodePathWatcher() {
     try {
-      final String path = "/data3";
+      final String path = "parent";
       final String pathValue = "value2";
       final List<String> dataList = new ArrayList<>();
 
       CyclicBarrier barrier = new CyclicBarrier(2);
-      MyPathWatcher.PathListener listener = new MyPathWatcher.PathListener() {
+      PathWatcherRecipe.PathListener listener = new PathWatcherRecipe.PathListener() {
 
         @Override
         public void nodeAdded(String path, String data) {
@@ -242,8 +242,8 @@ public class TestZooKeeperRecipes {
 
       zooKeeperRecipes.getPathWatcher().addPathWatch(path, listener);
 
-      // Set data
-      zooKeeperRecipes.setData(path, pathValue);
+      // Add Child
+      zooKeeperRecipes.setData("parent/child", pathValue);
       try {
         barrier.await(1, TimeUnit.SECONDS);
       } catch (InterruptedException e) {

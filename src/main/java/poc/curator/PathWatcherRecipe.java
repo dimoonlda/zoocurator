@@ -16,7 +16,7 @@ import java.util.List;
  * TreeWatch - Watch changes to root and all its sub-trees.
  * PathWatch - Watch only that node level and no sub-tree within it.
  */
-public final class MyPathWatcher implements Closeable {
+public final class PathWatcherRecipe implements Closeable {
 
   private final CuratorFramework client;
   // tracks all closeables so we can do a clean termination for all of them.
@@ -28,7 +28,7 @@ public final class MyPathWatcher implements Closeable {
     void nodeUpdated(String path, String data);
   }
 
-  public MyPathWatcher(CuratorFramework client) {
+  public PathWatcherRecipe(CuratorFramework client) {
     this.client = client;
   }
 
@@ -41,7 +41,8 @@ public final class MyPathWatcher implements Closeable {
   }
 
   public PathChildrenCache addPathWatch(final String path, PathListener listener) throws Exception {
-    final PathChildrenCache myPath = new PathChildrenCache(client, path, true);
+    final String newPath = ZKPaths.makePath(Config.CONFIG_PATH, path);
+    final PathChildrenCache myPath = new PathChildrenCache(client, newPath, true);
     myPath.start();
     addPathListener(myPath, listener);
     closeAbles.add(myPath);
@@ -54,7 +55,7 @@ public final class MyPathWatcher implements Closeable {
 
       @Override
       public void childEvent(CuratorFramework curatorFramework, TreeCacheEvent event) throws Exception {
-        System.out.println("Got event: " + event.getType() + " data:" + new String(event.getData().getData()));
+        System.out.println("Got Tree event: " + event.getType() + " data:" + new String(event.getData().getData()));
         switch (event.getType()) {
 
           case NODE_ADDED:
@@ -85,7 +86,7 @@ public final class MyPathWatcher implements Closeable {
 
       @Override
       public void childEvent(CuratorFramework curatorFramework, PathChildrenCacheEvent event) throws Exception {
-        System.out.println("Got event: " + event.getType() + " data:" + new String(event.getData().getData()));
+        System.out.println("Got Path event: " + event.getType() + " data:" + new String(event.getData().getData()));
         switch (event.getType()) {
 
           case CHILD_ADDED:
