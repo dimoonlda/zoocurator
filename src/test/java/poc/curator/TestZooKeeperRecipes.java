@@ -180,7 +180,7 @@ public class TestZooKeeperRecipes {
       final OrdersService ordersService = new OrdersService();
       zooKeeperRecipes.registerService(ordersService.getName(), 2000, ordersService);
       try {
-        barrier.await(1, TimeUnit.SECONDS);
+        barrier.await(3, TimeUnit.SECONDS);
       } catch (InterruptedException e) {
       }
 
@@ -200,6 +200,62 @@ public class TestZooKeeperRecipes {
 //      assertEquals("Values different", "DELETE", dataList.get(0).get(0));
     } catch (Exception e) {
     }
+  }
 
+  @Test
+  public void testNodePathWatcher() {
+    try {
+      final String path = "/data3";
+      final String pathValue = "value2";
+      final List<String> dataList = new ArrayList<>();
+
+      CyclicBarrier barrier = new CyclicBarrier(2);
+      MyPathWatcher.PathListener listener = new MyPathWatcher.PathListener() {
+
+        @Override
+        public void nodeAdded(String path, String data) {
+          dataList.add("ADD");
+          try {
+            barrier.await();
+          } catch (InterruptedException | BrokenBarrierException e) {
+          }
+        }
+
+        @Override
+        public void nodeDeleted(String path, String data) {
+          dataList.add("DELETE");
+          try {
+            barrier.await();
+          } catch (InterruptedException | BrokenBarrierException e) {
+          }
+        }
+
+        @Override
+        public void nodeUpdated(String path, String data) {
+          dataList.add("UPDATE");
+          try {
+            barrier.await();
+          } catch (InterruptedException | BrokenBarrierException e) {
+          }
+        }
+      };
+
+      zooKeeperRecipes.getPathWatcher().addPathWatch(path, listener);
+
+      // Set data
+      zooKeeperRecipes.setData(path, pathValue);
+      try {
+        barrier.await(1, TimeUnit.SECONDS);
+      } catch (InterruptedException e) {
+      }
+
+      assertEquals("Size not same", 1, dataList.size());
+      assertEquals("Values different", "ADD", dataList.get(0));
+      dataList.remove(0);
+
+    } catch (Exception e) {
+      e.printStackTrace();
+      fail("Got exception in testNodePathWatcher");
+    }
   }
 }
